@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply font-neucha;
+}
+
+.visually-hidden {
+  @apply absolute overflow-hidden w-px h-px whitespace-nowrap;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
