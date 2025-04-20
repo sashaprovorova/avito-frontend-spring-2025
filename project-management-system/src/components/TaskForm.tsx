@@ -1,30 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 import { validateField, TaskFields } from "../utils/validateTask";
-
-// Types
-
-type TaskFormProps = {
-  mode: "create" | "edit";
-  initialData?: {
-    title: string;
-    description: string;
-    boardId: number;
-    priority: string;
-    assigneeId: number;
-    status: string;
-  };
-  isBoardPage?: boolean;
-  showGoToBoard?: boolean;
-  boardName?: string;
-  onGoToBoard?: () => void;
-  onSuccess?: () => void;
-};
-
-type User = {
-  id: number;
-  fullName: string;
-};
+import { User, Task, TaskFormProps } from "../types";
 
 const TaskForm: React.FC<TaskFormProps> = ({
   mode,
@@ -311,13 +288,27 @@ const TaskForm: React.FC<TaskFormProps> = ({
         )}
       </div>
 
-      <button
-        type="submit"
-        className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white"
-        disabled={loading || Object.values(errors).some(Boolean)}
-      >
-        {loading ? "Сохраняем..." : mode === "edit" ? "Обновить" : "Создать"}
-      </button>
+      <div className="flex justify-between items-center pt-4">
+        {showGoToBoard && onGoToBoard ? (
+          <button
+            type="button"
+            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white"
+            onClick={onGoToBoard}
+          >
+            Перейти на доску
+          </button>
+        ) : (
+          <span />
+        )}
+
+        <button
+          type="submit"
+          className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white"
+          disabled={loading || Object.values(errors).some(Boolean)}
+        >
+          {loading ? "Сохраняем..." : mode === "edit" ? "Обновить" : "Создать"}
+        </button>
+      </div>
     </form>
   );
 };
