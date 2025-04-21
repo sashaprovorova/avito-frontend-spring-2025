@@ -16,9 +16,10 @@ export const isEquivalentStatus = (
 // добавляем пробел перед тем как выводить на экран
 
 export const getStatusLabel = (status: string): string => {
-  if (status === "ToDo" || status === Status.Backlog) return "To do";
-  if (status === "InProgress") return "In progress";
-  return "Done";
+  if (status === "ToDo" || status === Status.Backlog) return "To Do";
+  if (status === "InProgress") return "In Progress";
+  if (status === "Done") return "Done";
+  return status;
 };
 
 // возвращаем цвет текста для заголовка колонки в зависимости от статуса

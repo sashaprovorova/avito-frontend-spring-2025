@@ -18,6 +18,7 @@ const BoardPage = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [boardName, setBoardName] = useState(location.state?.boardName || "");
+
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
