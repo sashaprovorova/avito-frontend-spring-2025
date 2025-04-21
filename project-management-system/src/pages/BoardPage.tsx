@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import api from "../api";
 import { Task, Status } from "../types";
@@ -19,24 +19,44 @@ const BoardPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [boardName, setBoardName] = useState(location.state?.boardName || "");
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     // загружаем задачи при монтировании компонента или смене id доски
     fetchTasks();
+    // отменяем запрос при размонтировании
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [id, location.state?.refresh]);
 
   // получаем задачи текущей доски с сервера
   const fetchTasks = async () => {
+    // отменяем предыдущий запрос, если он ещё не завершён
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // создаём новый AbortController для текущего запроса
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     try {
-      const response = await api.get(`/boards/${id}`);
+      const response = await api.get(`/boards/${id}`, {
+        signal: controller.signal,
+      });
       const data = response.data.data || [];
       setTasks(data);
 
       if (data.length > 0 && !boardName) {
         setBoardName(data[0].boardName);
       }
-    } catch (err) {
-      console.error("Ошибка при загрузке задач доски", err);
+    } catch (err: any) {
+      if (err.name === "CanceledError" || err.name === "AbortError") {
+        console.log("Запрос был отменён");
+      } else {
+        console.error("Ошибка при загрузке задач доски", err);
+      }
     }
   };
 
@@ -147,7 +167,9 @@ const BoardPage = () => {
           isOpen={showForm}
           onClose={() => setShowForm(false)}
           mode="edit"
+          isBoardPage={true}
           initialData={{
+            id: selectedTask.id,
             title: selectedTask.title,
             description: selectedTask.description,
             boardId: selectedTask.boardId,

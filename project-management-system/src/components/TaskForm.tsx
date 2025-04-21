@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../api";
 import { validateField } from "../utils/validity";
 import { User, Task, TaskFormProps, TaskFields } from "../types";
@@ -27,10 +27,22 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<TaskFields, string>>>({});
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // находим имя доски по id или используем переданное имя
+  const currentBoardName =
+    boards.find((b) => b.id === boardId)?.name || boardName || "Текущий проект";
 
   // загружаем пользователей и доски при монтировании формы
   useEffect(() => {
     const fetchData = async () => {
+      // отменяем предыдущий запрос при повторном вызове
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       try {
         const [usersRes, boardsRes] = await Promise.all([
           api.get("/users"),
@@ -38,16 +50,25 @@ const TaskForm: React.FC<TaskFormProps> = ({
         ]);
         setUsers(usersRes.data?.data || []);
         setBoards(boardsRes.data?.data || []);
-      } catch (err) {
-        console.error("Ошибка при загрузке данных", err);
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          console.log("Запрос отменён");
+        } else {
+          console.error("Ошибка при загрузке данных", err);
+        }
       }
     };
     fetchData();
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   // валидируем отдельные поля
   const handleValidation = (name: TaskFields, value: string | number) => {
-    const error = validateField(name, value);
+    const error = validateField(name, value, mode);
     setErrors((prev) => ({ ...prev, [name]: error || "" }));
   };
 
@@ -70,7 +91,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
     for (const key in fields) {
       const field = key as TaskFields;
-      const message = validateField(field, fields[field]);
+      const message = validateField(field, fields[field], mode);
       if (message) {
         newErrors[field] = message;
         valid = false;
@@ -97,11 +118,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
         await api.post("/tasks/create", payload);
       }
       // обновляем задачу
-      if (mode === "edit" && initialData?.id) {
+      else if (mode === "edit" && initialData?.id) {
         await api.put(`/tasks/update/${initialData.id}`, payload);
-      } else {
-        await api.post("/tasks/create", payload);
       }
+
       // вызываем коллбек и очищаем форму
       onSuccess?.();
       setTitle("");
@@ -188,20 +208,22 @@ const TaskForm: React.FC<TaskFormProps> = ({
             aria-describedby={errors.boardId ? "error-boardId" : undefined}
             className="w-full border rounded px-3 py-2"
             value={boardId}
+            disabled={isBoardPage}
             onChange={(e) => {
               const value = Number(e.target.value);
               setBoardId(value);
               handleValidation("boardId", value);
             }}
           >
-            <option value={0} disabled>
-              Проект
-            </option>
-            {boards.map((board) => (
-              <option key={board.id} value={board.id}>
-                {board.name}
-              </option>
-            ))}
+            <option value={boardId}>{currentBoardName}</option>
+            {!isBoardPage &&
+              boards
+                .filter((b) => b.id !== boardId)
+                .map((board) => (
+                  <option key={board.id} value={board.id}>
+                    {board.name}
+                  </option>
+                ))}
           </select>
           {errors.boardId && (
             <p id="error-boardId" className="text-red-500 text-sm" role="alert">

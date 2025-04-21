@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../api";
 import TaskForm from "../components/TaskForm";
 import { useNavigate } from "react-router-dom";
@@ -22,12 +22,20 @@ const IssuesPage = () => {
   // состояния для модального окна редактирования/создания задачи
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showForm, setShowForm] = useState(false);
-
+  const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
 
   // загружаем все данные при монтировании: задачи, доски, пользователей
   useEffect(() => {
     const fetchData = async () => {
+      // если до этого был активный запрос, то отменяем его
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // создаём новый AbortController для текущего запроса
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         const [tasksRes, boardsRes, usersRes] = await Promise.all([
           api.get("/tasks"),
@@ -38,12 +46,23 @@ const IssuesPage = () => {
         setTasks(tasksRes.data?.data || []);
         setBoards(boardsRes.data?.data || []);
         setUsers(usersRes.data?.data || []);
-      } catch (err) {
-        console.error("Ошибка при загрузке данных", err);
+      } catch (err: any) {
+        // если запрос был отменён, то игнорируем ошибку
+        if (err.name === "AbortError") {
+          console.log("Запрос отменён");
+        } else {
+          console.error("Ошибка при загрузке данных", err);
+        }
       }
     };
 
     fetchData();
+    // отменяем активный запрос при размонтировании компонента или переходе
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   // фильтруем задачи при изменении состояния
