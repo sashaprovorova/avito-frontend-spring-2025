@@ -7,19 +7,25 @@ import TaskFormModal from "../components/TaskFormModal";
 import { Board } from "../types/index";
 import { isEquivalentStatus, getStatusLabel } from "../utils/status";
 
+// отображаем и фильтруем все задачи с возможностью создания/редактирования
 const IssuesPage = () => {
+  // состояния для хранения задач, отфильтрованных задач, досок, пользователей
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [boards, setBoards] = useState<Board[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  // состояния для фильтров и поиска
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [boardFilter, setBoardFilter] = useState<number | null>(null);
+
+  // состояния для модального окна редактирования/создания задачи
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   const navigate = useNavigate();
 
+  // загружаем все данные при монтировании: задачи, доски, пользователей
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -40,19 +46,22 @@ const IssuesPage = () => {
     fetchData();
   }, []);
 
+  // фильтруем задачи при изменении состояния
   useEffect(() => {
     let result = [...tasks];
 
+    // фильтр по статусу
     if (statusFilter) {
       const filterValue =
         statusFilter === "ToDo" ? ["ToDo", "Backlog"] : [statusFilter];
       result = result.filter((task) => filterValue.includes(task.status));
     }
-
+    // фильтруем по доске
     if (boardFilter) {
       result = result.filter((task) => task.boardId === boardFilter);
     }
 
+    //  фильтруем по поисковому запросу
     if (search.trim()) {
       const s = search.toLowerCase();
       result = result.filter(
@@ -65,11 +74,13 @@ const IssuesPage = () => {
     setFilteredTasks(result);
   }, [search, statusFilter, boardFilter, tasks]);
 
+  // открываем модальное окно для редактирования задачи
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setShowForm(true);
   };
 
+  // обновляем задачи после успешного создания или редактирования
   const handleSuccess = async () => {
     const updatedTasks = await api.get("/tasks");
     setTasks(updatedTasks.data?.data || []);
@@ -78,7 +89,8 @@ const IssuesPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-4 max-w-5xl mx-auto">
+    <main className="p-6 space-y-4 max-w-5xl mx-auto">
+      {/* фильтры */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:text-lg">
         <input
           type="text"
@@ -113,6 +125,7 @@ const IssuesPage = () => {
         </select>
       </div>
 
+      {/* список задач */}
       <ul className="space-y-2">
         {filteredTasks.map((task) => (
           <li
@@ -132,6 +145,7 @@ const IssuesPage = () => {
         ))}
       </ul>
 
+      {/* модальное окно для создания/редактирования задачи */}
       <TaskFormModal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
@@ -139,6 +153,7 @@ const IssuesPage = () => {
         initialData={
           selectedTask
             ? {
+                id: selectedTask.id,
                 title: selectedTask.title,
                 description: selectedTask.description,
                 boardId: selectedTask.boardId,
@@ -155,12 +170,14 @@ const IssuesPage = () => {
             state: {
               boardName: boards.find((b) => b.id === selectedTask?.boardId)
                 ?.name,
+              refresh: true,
             },
           })
         }
         boardName={boards.find((b) => b.id === selectedTask?.boardId)?.name}
       />
 
+      {/* кнопка создания новой задачи */}
       <button
         onClick={() => {
           setSelectedTask(null);
@@ -171,7 +188,7 @@ const IssuesPage = () => {
       >
         Создать задачу
       </button>
-    </div>
+    </main>
   );
 };
 

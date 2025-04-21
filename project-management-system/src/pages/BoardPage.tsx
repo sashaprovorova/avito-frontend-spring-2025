@@ -9,7 +9,9 @@ import {
   getStatusColor,
 } from "../utils/status";
 
+// отображает задачи выбранной доски в виде канбан доски с возможностью редактирования и перетаскивания
 const BoardPage = () => {
+  // получаем id доски из URL
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -19,9 +21,11 @@ const BoardPage = () => {
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
 
   useEffect(() => {
+    // загружаем задачи при монтировании компонента или смене id доски
     fetchTasks();
-  }, [id]);
+  }, [id, location.state?.refresh]);
 
+  // получаем задачи текущей доски с сервера
   const fetchTasks = async () => {
     try {
       const response = await api.get(`/boards/${id}`);
@@ -36,22 +40,26 @@ const BoardPage = () => {
     }
   };
 
+  // при клике на задачу открываем модальное окно
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setShowForm(true);
   };
 
+  // после успешного создания/редактирования задачи обновляем список
   const handleSuccess = async () => {
     await fetchTasks();
     setShowForm(false);
     setSelectedTask(null);
   };
 
+  // разрешаем перетаскивание задачи в колонку с другим статусом
   const allowDrop = (e: React.DragEvent<HTMLDivElement>, status: string) => {
     e.preventDefault();
     setDragOverStatus(status);
   };
 
+  // обработка события дропа задачи
   const handleDrop = async (
     e: React.DragEvent<HTMLDivElement>,
     newStatus: string
@@ -63,6 +71,7 @@ const BoardPage = () => {
     const task = tasks.find((t) => t.id.toString() === taskId);
     if (!task || isEquivalentStatus(task.status, newStatus)) return;
 
+    // визуальный ToDo сохраняем как Backlog на сервере
     const backendStatus: Status =
       newStatus === "ToDo" ? Status.Backlog : (newStatus as Status);
 
@@ -84,10 +93,12 @@ const BoardPage = () => {
   const statusColumns = ["ToDo", "InProgress", "Done"];
 
   return (
-    <div className="p-6 space-y-6">
+    <main className="p-6 space-y-6">
+      {/* заголовок страницы — название проекта */}
       <h1 className="text-2xl font-bold">{boardName || "Проект"}</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* канбан доска с тремя колонками по статусам */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {statusColumns.map((status) => (
           <div
             key={status}
@@ -98,6 +109,7 @@ const BoardPage = () => {
             onDragOver={(e) => allowDrop(e, status)}
             onDragLeave={() => setDragOverStatus(null)}
           >
+            {/* заголовок колонки */}
             <h2
               className={`text-lg lg:text-2xl font-semibold ${getStatusColor(
                 status
@@ -105,29 +117,31 @@ const BoardPage = () => {
             >
               {getStatusLabel(status)}
             </h2>
-
-            {tasks
-              .filter((t) => isEquivalentStatus(t.status, status))
-              .map((task) => (
-                <div
-                  key={task.id}
-                  className="border border-black p-3 rounded cursor-pointer hover:bg-gray-50"
-                  draggable
-                  onDragStart={(e) =>
-                    e.dataTransfer.setData("taskId", task.id.toString())
-                  }
-                  onClick={() => handleTaskClick(task)}
-                >
-                  <h3 className="font-medium lg:text-xl">{task.title}</h3>
-                  <p className="text-sm lg:text-lg text-gray-600">
-                    {task.description}
-                  </p>
-                </div>
-              ))}
+            {/* список задач в колонке */}
+            <ul className="space-y-2">
+              {tasks
+                .filter((t) => isEquivalentStatus(t.status, status))
+                .map((task) => (
+                  <li
+                    key={task.id}
+                    className="border border-black p-3 rounded cursor-pointer hover:bg-gray-50"
+                    draggable
+                    onDragStart={(e) =>
+                      e.dataTransfer.setData("taskId", task.id.toString())
+                    }
+                    onClick={() => handleTaskClick(task)}
+                  >
+                    <h3 className="font-medium lg:text-xl">{task.title}</h3>
+                    <p className="text-sm lg:text-lg text-gray-600">
+                      {task.description}
+                    </p>
+                  </li>
+                ))}
+            </ul>
           </div>
         ))}
-      </div>
-
+      </section>
+      {/* модальное окно для редактирования задачи */}
       {showForm && selectedTask && (
         <TaskFormModal
           isOpen={showForm}
@@ -149,7 +163,7 @@ const BoardPage = () => {
           onSuccess={handleSuccess}
         />
       )}
-    </div>
+    </main>
   );
 };
 

@@ -2,6 +2,7 @@
 
 // TaskForm
 export type TaskFormFields = {
+  id?: number;
   title: string;
   description: string;
   boardId: number;
@@ -72,3 +73,11 @@ export interface Board {
   description?: string;
   taskCount?: number;
 }
+
+export type TaskFields =
+  | "title"
+  | "description"
+  | "boardId"
+  | "priority"
+  | "status"
+  | "assigneeId";

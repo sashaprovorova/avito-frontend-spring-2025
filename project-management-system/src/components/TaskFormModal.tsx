@@ -3,6 +3,7 @@ import React from "react";
 import TaskForm from "./TaskForm";
 import { TaskFormModalProps } from "../types/index";
 
+// создаем модальное окно с формой создания или редактирования задачи
 const TaskFormModal: React.FC<TaskFormModalProps> = ({
   isOpen,
   onClose,

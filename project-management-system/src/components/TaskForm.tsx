@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
-import { validateField, TaskFields } from "../utils/validity";
-import { User, Task, TaskFormProps } from "../types";
+import { validateField } from "../utils/validity";
+import { User, Task, TaskFormProps, TaskFields } from "../types";
 
+// создаем и редактируем задачи
 const TaskForm: React.FC<TaskFormProps> = ({
   mode,
   initialData,
@@ -27,6 +28,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<TaskFields, string>>>({});
 
+  // загружаем пользователей и доски при монтировании формы
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -43,14 +45,17 @@ const TaskForm: React.FC<TaskFormProps> = ({
     fetchData();
   }, []);
 
+  // валидируем отдельные поля
   const handleValidation = (name: TaskFields, value: string | number) => {
     const error = validateField(name, value);
     setErrors((prev) => ({ ...prev, [name]: error || "" }));
   };
 
+  // обрабатываем отправку формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // собираем поля и валидируем
     const fields: Record<TaskFields, string | number> = {
       title,
       description,
@@ -75,6 +80,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
     setErrors(newErrors);
     if (!valid) return;
 
+    // готовим данные для запроса
     const payload = {
       title,
       description,
@@ -86,11 +92,17 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
     try {
       setLoading(true);
+      // создаем задачу с нуля
       if (mode === "create") {
         await api.post("/tasks/create", payload);
-      } else {
-        // TODO: PUT request
       }
+      // обновляем задачу
+      if (mode === "edit" && initialData?.id) {
+        await api.put(`/tasks/update/${initialData.id}`, payload);
+      } else {
+        await api.post("/tasks/create", payload);
+      }
+      // вызываем коллбек и очищаем форму
       onSuccess?.();
       setTitle("");
       setDescription("");
@@ -108,11 +120,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* заголовок формы */}
       <h2 className="text-2xl font-bold">
         {mode === "edit" ? "Редактирование задачи" : "Создание задачи"}
       </h2>
-
+      {/* список полей */}
       <ul className="space-y-4 list-none p-0">
+        {/* название */}
         <li>
           <label htmlFor="task-title" className="visually-hidden">
             Название
@@ -135,7 +149,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             </p>
           )}
         </li>
-
+        {/* описание */}
         <li>
           <label htmlFor="task-description" className="visually-hidden">
             Описание
@@ -164,7 +178,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             </p>
           )}
         </li>
-
+        {/* проект */}
         <li>
           <label htmlFor="task-board" className="visually-hidden">
             Проект
@@ -195,7 +209,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             </p>
           )}
         </li>
-
+        {/* приоритет */}
         <li>
           <label htmlFor="task-priority" className="visually-hidden">
             Приоритет
@@ -227,7 +241,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             </p>
           )}
         </li>
-
+        {/* статус */}
         <li>
           <label htmlFor="task-status" className="visually-hidden">
             Статус
@@ -255,7 +269,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             </p>
           )}
         </li>
-
+        {/* исполнитель */}
         <li>
           <label htmlFor="task-assignee" className="visually-hidden">
             Исполнитель
@@ -293,7 +307,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
           )}
         </li>
       </ul>
-
+      {/* кнопки перейти на доску и сохранить */}
       <div className="flex justify-between items-center pt-4">
         {showGoToBoard && onGoToBoard ? (
           <button

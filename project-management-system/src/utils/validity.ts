@@ -1,11 +1,6 @@
-export type TaskFields =
-  | "title"
-  | "description"
-  | "boardId"
-  | "priority"
-  | "status"
-  | "assigneeId";
+import { TaskFields } from "../types";
 
+// валидируем значения конкретных полей формы
 export const validateField = (field: TaskFields, value: string | number) => {
   switch (field) {
     case "title":
