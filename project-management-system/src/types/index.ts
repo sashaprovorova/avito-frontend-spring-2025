@@ -1,16 +1,18 @@
-// // types.ts
+// types.ts
 
 // TaskForm
+export type TaskFormFields = {
+  title: string;
+  description: string;
+  boardId: number;
+  priority: string;
+  assigneeId: number;
+  status: string;
+};
+
 export type TaskFormProps = {
   mode: "create" | "edit";
-  initialData?: {
-    title: string;
-    description: string;
-    boardId: number;
-    priority: string;
-    assigneeId: number;
-    status: string;
-  };
+  initialData?: TaskFormFields;
   isBoardPage?: boolean;
   showGoToBoard?: boolean;
   boardName?: string;
@@ -18,7 +20,6 @@ export type TaskFormProps = {
   onSuccess?: () => void;
 };
 
-// Full user structure (used across Task + dropdowns)
 export interface User {
   id: number;
   fullName: string;
@@ -26,58 +27,48 @@ export interface User {
   avatarUrl: string;
 }
 
-// You can alias it if needed
 export type Assignee = User;
+
+export enum Priority {
+  Low = "Low",
+  Medium = "Medium",
+  High = "High",
+}
+
+export enum Status {
+  Backlog = "Backlog",
+  InProgress = "InProgress",
+  Done = "Done",
+}
 
 export interface Task {
   id: number;
   title: string;
   description: string;
-  priority: "Low" | "Medium" | "High";
-  status: "ToDo" | "InProgress" | "Done" | "Backlog";
+  priority: Priority;
+  status: Status;
   assignee: Assignee;
   boardId: number;
   boardName: string;
 }
 
-// types.ts
+// TaskFormModal
+export type TaskFormModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  mode: "create" | "edit";
+  initialData?: TaskFormFields;
+  showGoToBoard?: boolean;
+  onGoToBoard?: () => void;
+  boardName?: string;
+  onSuccess: () => void;
+  isBoardPage?: boolean;
+};
 
-// export type TaskFormInitialData = {
-//   id?: number;
-//   title: string;
-//   description: string;
-//   boardId: number;
-//   priority: string;
-//   assigneeId: number;
-//   status: string;
-// };
-
-// export type TaskFormProps = {
-//   mode: "create" | "edit";
-//   initialData?: TaskFormInitialData;
-//   isBoardPage?: boolean;
-//   showGoToBoard?: boolean;
-//   boardName?: string;
-//   onGoToBoard?: () => void;
-//   onSuccess?: () => void;
-// };
-
-// export interface User {
-//   id: number;
-//   fullName: string;
-//   email: string;
-//   avatarUrl: string;
-// }
-
-// export type Assignee = User;
-
-// export interface Task {
-//   id: number;
-//   title: string;
-//   description: string;
-//   priority: "Low" | "Medium" | "High";
-//   status: "ToDo" | "InProgress" | "Done" | "Backlog";
-//   assignee: Assignee;
-//   boardId: number;
-//   boardName: string;
-// }
+// IssuesPage, BoardsPage
+export interface Board {
+  id: number;
+  name: string;
+  description?: string;
+  taskCount?: number;
+}

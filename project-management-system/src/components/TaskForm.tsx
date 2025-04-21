@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
-import { validateField, TaskFields } from "../utils/validateTask";
+import { validateField, TaskFields } from "../utils/validity";
 import { User, Task, TaskFormProps } from "../types";
 
 const TaskForm: React.FC<TaskFormProps> = ({
@@ -19,7 +19,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [boards, setBoards] = useState<{ id: number; name: string }[]>([]);
   const [boardId, setBoardId] = useState(initialData?.boardId || 0);
   const [priority, setPriority] = useState(initialData?.priority || "");
-  const [status, setStatus] = useState(initialData?.status || "");
+  const [status, setStatus] = useState(
+    initialData?.status === "Backlog" ? "ToDo" : initialData?.status || ""
+  );
   const [assigneeId, setAssigneeId] = useState(initialData?.assigneeId || 0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,7 +75,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
     setErrors(newErrors);
     if (!valid) return;
 
-    const payload = { title, description, boardId, priority, assigneeId };
+    const payload = {
+      title,
+      description,
+      boardId,
+      priority,
+      assigneeId,
+      status: status === "ToDo" ? "Backlog" : status,
+    };
 
     try {
       setLoading(true);
@@ -103,190 +112,187 @@ const TaskForm: React.FC<TaskFormProps> = ({
         {mode === "edit" ? "Редактирование задачи" : "Создание задачи"}
       </h2>
 
-      {/* Title */}
-      <div>
-        <label htmlFor="task-title" className="visually-hidden">
-          Название
-        </label>
-        <input
-          id="task-title"
-          aria-describedby={errors.title ? "error-title" : undefined}
-          type="text"
-          className="w-full border rounded px-3 py-2"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            handleValidation("title", e.target.value);
-          }}
-          placeholder="Название"
-        />
-        {errors.title && (
-          <p
-            id="error-title"
-            className="text-red-500 text-sm"
-            role="alert"
-            aria-live="assertive"
-          >
-            {errors.title}
-          </p>
-        )}
-      </div>
+      <ul className="space-y-4 list-none p-0">
+        <li>
+          <label htmlFor="task-title" className="visually-hidden">
+            Название
+          </label>
+          <input
+            id="task-title"
+            aria-describedby={errors.title ? "error-title" : undefined}
+            type="text"
+            className="w-full border rounded px-3 py-2"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              handleValidation("title", e.target.value);
+            }}
+            placeholder="Название"
+          />
+          {errors.title && (
+            <p id="error-title" className="text-red-500 text-sm" role="alert">
+              {errors.title}
+            </p>
+          )}
+        </li>
 
-      {/* Description */}
-      <div>
-        <label htmlFor="task-description" className="visually-hidden">
-          Описание
-        </label>
-        <textarea
-          id="task-description"
-          aria-describedby={
-            errors.description ? "error-description" : undefined
-          }
-          className="w-full border rounded px-3 py-2"
-          rows={3}
-          value={description}
-          onChange={(e) => {
-            setDescription(e.target.value);
-            handleValidation("description", e.target.value);
-          }}
-          placeholder="Описание"
-        />
-        {errors.description && (
-          <p
-            id="error-description"
-            className="text-red-500 text-sm"
-            role="alert"
-          >
-            {errors.description}
-          </p>
-        )}
-      </div>
+        <li>
+          <label htmlFor="task-description" className="visually-hidden">
+            Описание
+          </label>
+          <textarea
+            id="task-description"
+            aria-describedby={
+              errors.description ? "error-description" : undefined
+            }
+            className="w-full border rounded px-3 py-2"
+            rows={3}
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              handleValidation("description", e.target.value);
+            }}
+            placeholder="Описание"
+          />
+          {errors.description && (
+            <p
+              id="error-description"
+              className="text-red-500 text-sm"
+              role="alert"
+            >
+              {errors.description}
+            </p>
+          )}
+        </li>
 
-      {/* Project */}
-      <div>
-        <label htmlFor="task-board" className="visually-hidden">
-          Проект
-        </label>
-        <select
-          id="task-board"
-          aria-describedby={errors.boardId ? "error-boardId" : undefined}
-          className="w-full border rounded px-3 py-2"
-          value={boardId}
-          onChange={(e) => {
-            const value = Number(e.target.value);
-            setBoardId(value);
-            handleValidation("boardId", value);
-          }}
-        >
-          <option value={0} disabled>
+        <li>
+          <label htmlFor="task-board" className="visually-hidden">
             Проект
-          </option>
-          {boards.map((board) => (
-            <option key={board.id} value={board.id}>
-              {board.name}
-            </option>
-          ))}
-        </select>
-        {errors.boardId && (
-          <p id="error-boardId" className="text-red-500 text-sm" role="alert">
-            {errors.boardId}
-          </p>
-        )}
-      </div>
-
-      {/* Priority */}
-      <div>
-        <label htmlFor="task-priority" className="visually-hidden">
-          Приоритет
-        </label>
-        <select
-          id="task-priority"
-          aria-describedby={errors.priority ? "error-priority" : undefined}
-          className="w-full border rounded px-3 py-2"
-          value={priority}
-          onChange={(e) => {
-            setPriority(e.target.value);
-            handleValidation("priority", e.target.value);
-          }}
-        >
-          <option value="" disabled>
-            Приоритет
-          </option>
-          <option value="High">Высокий</option>
-          <option value="Medium">Средний</option>
-          <option value="Low">Низкий</option>
-        </select>
-        {errors.priority && (
-          <p id="error-priority" className="text-red-500 text-sm" role="alert">
-            {errors.priority}
-          </p>
-        )}
-      </div>
-
-      {/* Status */}
-      <div>
-        <label htmlFor="task-status" className="visually-hidden">
-          Статус
-        </label>
-        <select
-          id="task-status"
-          aria-describedby={errors.status ? "error-status" : undefined}
-          className="w-full border rounded px-3 py-2"
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            handleValidation("status", e.target.value);
-          }}
-        >
-          <option value="" disabled>
-            Статус
-          </option>
-          <option value="ToDo">To Do</option>
-          <option value="InProgress">In Progress</option>
-          <option value="Done">Done</option>
-        </select>
-        {errors.status && (
-          <p id="error-status" className="text-red-500 text-sm" role="alert">
-            {errors.status}
-          </p>
-        )}
-      </div>
-
-      {/* Assignee */}
-      <div>
-        <label htmlFor="task-assignee" className="visually-hidden">
-          Исполнитель
-        </label>
-        <select
-          id="task-assignee"
-          aria-describedby={errors.assigneeId ? "error-assigneeId" : undefined}
-          className="w-full border rounded px-3 py-2"
-          value={assigneeId}
-          onChange={(e) => {
-            const value = Number(e.target.value);
-            setAssigneeId(value);
-            handleValidation("assigneeId", value);
-          }}
-        >
-          <option value={0} disabled>
-            Исполнитель
-          </option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.fullName}
-            </option>
-          ))}
-        </select>
-        {errors.assigneeId && (
-          <p
-            id="error-assigneeId"
-            className="text-red-500 text-sm"
-            role="alert"
+          </label>
+          <select
+            id="task-board"
+            aria-describedby={errors.boardId ? "error-boardId" : undefined}
+            className="w-full border rounded px-3 py-2"
+            value={boardId}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              setBoardId(value);
+              handleValidation("boardId", value);
+            }}
           >
-            {errors.assigneeId}
-          </p>
-        )}
-      </div>
+            <option value={0} disabled>
+              Проект
+            </option>
+            {boards.map((board) => (
+              <option key={board.id} value={board.id}>
+                {board.name}
+              </option>
+            ))}
+          </select>
+          {errors.boardId && (
+            <p id="error-boardId" className="text-red-500 text-sm" role="alert">
+              {errors.boardId}
+            </p>
+          )}
+        </li>
+
+        <li>
+          <label htmlFor="task-priority" className="visually-hidden">
+            Приоритет
+          </label>
+          <select
+            id="task-priority"
+            aria-describedby={errors.priority ? "error-priority" : undefined}
+            className="w-full border rounded px-3 py-2"
+            value={priority}
+            onChange={(e) => {
+              setPriority(e.target.value);
+              handleValidation("priority", e.target.value);
+            }}
+          >
+            <option value="" disabled>
+              Приоритет
+            </option>
+            <option value="High">Высокий</option>
+            <option value="Medium">Средний</option>
+            <option value="Low">Низкий</option>
+          </select>
+          {errors.priority && (
+            <p
+              id="error-priority"
+              className="text-red-500 text-sm"
+              role="alert"
+            >
+              {errors.priority}
+            </p>
+          )}
+        </li>
+
+        <li>
+          <label htmlFor="task-status" className="visually-hidden">
+            Статус
+          </label>
+          <select
+            id="task-status"
+            aria-describedby={errors.status ? "error-status" : undefined}
+            className="w-full border rounded px-3 py-2"
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              handleValidation("status", e.target.value);
+            }}
+          >
+            <option value="" disabled>
+              Статус
+            </option>
+            <option value="ToDo">To Do</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+          {errors.status && (
+            <p id="error-status" className="text-red-500 text-sm" role="alert">
+              {errors.status}
+            </p>
+          )}
+        </li>
+
+        <li>
+          <label htmlFor="task-assignee" className="visually-hidden">
+            Исполнитель
+          </label>
+          <select
+            id="task-assignee"
+            aria-describedby={
+              errors.assigneeId ? "error-assigneeId" : undefined
+            }
+            className="w-full border rounded px-3 py-2"
+            value={assigneeId}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              setAssigneeId(value);
+              handleValidation("assigneeId", value);
+            }}
+          >
+            <option value={0} disabled>
+              Исполнитель
+            </option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.fullName}
+              </option>
+            ))}
+          </select>
+          {errors.assigneeId && (
+            <p
+              id="error-assigneeId"
+              className="text-red-500 text-sm"
+              role="alert"
+            >
+              {errors.assigneeId}
+            </p>
+          )}
+        </li>
+      </ul>
 
       <div className="flex justify-between items-center pt-4">
         {showGoToBoard && onGoToBoard ? (

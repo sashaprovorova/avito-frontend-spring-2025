@@ -4,11 +4,8 @@ import TaskForm from "../components/TaskForm";
 import { useNavigate } from "react-router-dom";
 import { Task, User } from "../types";
 import TaskFormModal from "../components/TaskFormModal";
-
-interface Board {
-  id: number;
-  name: string;
-}
+import { Board } from "../types/index";
+import { isEquivalentStatus, getStatusLabel } from "../utils/status";
 
 const IssuesPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -80,13 +77,8 @@ const IssuesPage = () => {
     setSelectedTask(null);
   };
 
-  const displayStatus = (status: string) =>
-    status === "Backlog" ? "ToDo" : status;
-
   return (
     <div className="p-6 space-y-4 max-w-5xl mx-auto">
-      {/* <h1 className="text-2xl font-bold mb-4">Все задачи</h1> */}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:text-lg">
         <input
           type="text"
@@ -102,8 +94,8 @@ const IssuesPage = () => {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="">Все статусы</option>
-          <option value="ToDo">To Do</option>
-          <option value="InProgress">In Progress</option>
+          <option value="ToDo">To do</option>
+          <option value="InProgress">In progress</option>
           <option value="Done">Done</option>
         </select>
 
@@ -121,24 +113,24 @@ const IssuesPage = () => {
         </select>
       </div>
 
-      <div className="space-y-2">
+      <ul className="space-y-2">
         {filteredTasks.map((task) => (
-          <div
+          <li
             key={task.id}
             className="border border-black p-4 rounded cursor-pointer hover:bg-gray-50"
             onClick={() => handleTaskClick(task)}
           >
-            <h3 className="font-semibold lg:text-2xl  font ">{task.title}</h3>
+            <h3 className="font-semibold lg:text-2xl font ">{task.title}</h3>
             <p className="text-sm lg:text-lg text-gray-500">
               {task.description}
             </p>
-            <p className="text-xs lg:text-lg   text-gray-400">
-              Статус: {displayStatus(task.status)} | Проект: {task.boardName} |
+            <p className="text-xs lg:text-lg text-gray-400">
+              Статус: {getStatusLabel(task.status)} | Проект: {task.boardName} |
               Исполнитель: {task.assignee?.fullName}
             </p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
       <TaskFormModal
         isOpen={showForm}
@@ -158,11 +150,17 @@ const IssuesPage = () => {
         }
         onSuccess={handleSuccess}
         showGoToBoard={!!selectedTask}
-        onGoToBoard={() => navigate(`/board/${selectedTask?.boardId}`)}
+        onGoToBoard={() =>
+          navigate(`/board/${selectedTask?.boardId}`, {
+            state: {
+              boardName: boards.find((b) => b.id === selectedTask?.boardId)
+                ?.name,
+            },
+          })
+        }
         boardName={boards.find((b) => b.id === selectedTask?.boardId)?.name}
       />
 
-      {/* Floating Create Button */}
       <button
         onClick={() => {
           setSelectedTask(null);
