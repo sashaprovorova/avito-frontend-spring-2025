@@ -1,46 +1,46 @@
-# Getting Started with Create React App
+# 🗂️ Project Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Это веб-приложение для управления задачами в виде канбан-доски. Поддерживает создание, редактирование и фильтрацию задач по статусу, проекту и исполнителю.
 
-## Available Scripts
+## Возможности
 
-In the project directory, you can run:
+- Создание и редактирование задач
+- Управление статусами через drag-and-drop
+- Фильтрация по статусу, проекту и исполнителю
+- Модальные окна для формы редактирования
+- Страница задач и страница отдельной доски
+- **Адаптивный дизайн** — работает на мобильных, планшетах и десктопах
+- **Доступность**: формы и кнопки сопровождаются `aria-label`, используются `role="alert"` и семантические элементы
+- **Кастомный шрифт** — шрифт _Neucha_ для уникального визуального стиля
 
-### `npm start`
+## Стек технологий
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Frontend**: React 19 + TypeScript + TailwindCSS
+- **API-запросы**: Axios
+- **Тестирование**: Jest + React Testing Library
+- **Сборка**: CRA (Create React App)
+- **Контейнеризация**: Docker Compose
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 📦 Запуск проекта в Docker
 
-### `npm test`
+Проект полностью работает в контейнеризированной среде. Сервер и клиент запускаются вместе с помощью Docker Compose.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Установка и запуск
 
-### `npm run build`
+Убедитесь, что установлен Docker и Docker Compose. Далее выполните:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+docker-compose up --build
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## После завершения сборки:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Клиент будет доступен на: http://localhost:3000
+- Сервер — на: http://localhost:8080/api/v1
 
-### `npm run eject`
+## Обоснование выбора необязательных технологий
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Все компоненты выбранного стека отлично сочетаются друг с другом, обеспечивая быструю разработку, масштабируемость и поддержку:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- TypeScript — добавляет типизацию, предотвращает ошибки на этапе компиляции и делает код легче поддерживаемым
+- TailwindCSS — позволяет писать стили быстро и удобно, не создавая отдельные CSS-файлы
+- Docker Compose — обеспечивает единообразную и повторяемую среду как для frontend, так и для backend, упрощая запуск и деплой
+- Headless UI — предоставляет анимированные и доступные модальные окна, при этом позволяя использовать собственную стилизацию
